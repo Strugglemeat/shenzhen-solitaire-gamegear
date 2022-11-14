@@ -633,7 +633,7 @@ void render_card_background (uint8_t col, uint8_t y, uint8_t card, bool stacked,
 
     render_card_tiles (card_tiles, card, stacked);
 
-    SMS_loadTileMapArea (4 * col, y, &card_tiles, 4, covered ? 1 : 6);
+    SMS_loadTileMapArea (4 * col, y, &card_tiles, 4, covered ? 1 : 4);//last parameter 6->4
 }
 
 /*
@@ -671,7 +671,7 @@ void render_background (void)
         }
         else
         {
-            SMS_loadTileMapArea (4 * col, 1, &empty_slot, 4, 6);
+            SMS_loadTileMapArea (4 * col, 1, &empty_slot, 4, 4);//last parameter 6->4
         }
     }
 
@@ -687,7 +687,7 @@ void render_background (void)
 
         if (stack [col] [0] == 0xff)
         {
-            SMS_loadTileMapArea (4 * col, 9, &empty_slot, 4, 6);
+            SMS_loadTileMapArea (4 * col, 9, &empty_slot, 4, 4);//last parameter 6->4
             depth = 1;
         }
         else
@@ -708,7 +708,7 @@ void render_background (void)
 
         /* Clear area below stack */
         depth += 5;
-        while (depth < 18)
+        while (depth < 18)//18
         {
             SMS_loadTileMapArea (4 * col, 9 + depth, &blank_line, 4, 1);
             depth++;
@@ -1197,12 +1197,10 @@ void menu (void)
     bool in_menu = true;
     uint16_t card_tiles [] = {
         BLANK_CARD +  0, BLANK_CARD +  2, BLANK_CARD +  2, BLANK_CARD +  3,
+        //BLANK_CARD +  5, BLANK_CARD +  6, BLANK_CARD +  6, BLANK_CARD +  7,
         BLANK_CARD +  5, BLANK_CARD +  6, BLANK_CARD +  6, BLANK_CARD +  7,
         BLANK_CARD +  5, BLANK_CARD +  6, BLANK_CARD +  6, BLANK_CARD +  7,
-
-        BLANK_CARD +  5, BLANK_CARD +  6, BLANK_CARD +  6, BLANK_CARD +  7,
-        BLANK_CARD +  5, BLANK_CARD +  6, BLANK_CARD +  6, BLANK_CARD +  7,
-
+        //BLANK_CARD +  5, BLANK_CARD +  6, BLANK_CARD +  6, BLANK_CARD +  7,
         BLANK_CARD +  8, BLANK_CARD +  9, BLANK_CARD +  9, BLANK_CARD + 10
     };
 
