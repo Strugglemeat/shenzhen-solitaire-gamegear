@@ -316,11 +316,11 @@ void cursor_sd_to_xy (uint8_t stack, uint8_t depth, uint8_t *x, uint8_t *y)
 
     if (stack == CURSOR_DRAGON_BUTTONS)
     {
-        *y = (depth * 16) + 16;
+        *y = (depth * 16) + 30;//+16
     }
     else if (stack > CURSOR_COLUMN_8)
     {
-        *y = 12;
+        *y = 38;//12 default. 20 works well
     }
     else
     {
@@ -634,7 +634,8 @@ void render_card_background (uint8_t col, uint8_t y, uint8_t card, bool stacked,
 
     render_card_tiles (card_tiles, card, stacked);
 
-    SMS_loadTileMapArea (4 * col, y+1, &card_tiles, 4, covered ? 1 : 4);//last parameter 6->4    y-1
+    SMS_loadTileMapArea (4 * col, y+1, &card_tiles, 4, covered ? 1 : 4);//last parameter 6->4    y+1
+//the cards in the playing field
 }
 
 /*
@@ -668,11 +669,11 @@ void render_background (void)
         if (stack [i + 8] [0] != 0xff)//these are cards dropped into the top row
         {
             uint8_t depth = top_card (i + 8);
-            render_card_background (col, 2, stack [i + 8] [depth], false, false);//2nd param 1->2, 2 works well
+            render_card_background (col, 3, stack [i + 8] [depth], false, false);//2nd param 2
         }
         else
         {
-            SMS_loadTileMapArea (4 * col, 3, &empty_slot, 4, 4);//last parameter 6->4, 2nd parameter 1->4, 1 works well
+            SMS_loadTileMapArea (4 * col, 4, &empty_slot, 4, 4);//last parameter 6->4, 2nd parameter 3
         }
     }
 
@@ -704,6 +705,7 @@ void render_background (void)
                 }
 
                 render_card_background (col, 9 + depth, card, depth, next != 0xff);//9
+//cards in the field
             }
         }
 
@@ -810,7 +812,7 @@ void deal (void)
 
             /* Animate the card being dealt */
             stack [STACK_HELD] [0] = deck [i];
-            card_slide (dest_x, 144+16, dest_x, dest_y, 8, false);//2nd paramter is where it comes from
+            card_slide (dest_x, 144+24, dest_x, dest_y, 8, false);//2nd paramter is where it comes from
             stack [STACK_HELD] [0] = 0xff;
 
             /* Store the card in its new position */
@@ -869,7 +871,7 @@ void undeal (void)
             stack_changed [stack_idx] = true;
 
             render_background ();
-            card_slide (from_x, from_y, from_x, 192, 8, false);
+            card_slide (from_x, from_y, from_x, 144+24, 8, false);//192
 
             stack [STACK_HELD] [0] = 0xff;
         }
@@ -1172,19 +1174,19 @@ void next_palette (void)
     switch (index)
     {
         case 0:
-            GG_setSpritePaletteColor (0, 0x04); /* Dark green */
-            GG_setBGPaletteColor     (0, 0x04); /* Dark green */
-            GG_setBGPaletteColor     (1, 0x19); /* Light green */
+            GG_setSpritePaletteColor (0, 0x05); /* Dark green */ //0x04
+            GG_setBGPaletteColor     (0, 0x05); /* Dark green */
+            GG_setBGPaletteColor     (1, 0xb9); /* Light green */
             break;
         case 1:
-            GG_setSpritePaletteColor (0, 0x24); /* Light blue */
-            GG_setBGPaletteColor     (0, 0x24); /* Light blue */
-            GG_setBGPaletteColor     (1, 0x20); /* Dark blue */
+            GG_setSpritePaletteColor (0, 0xb4); /* Light blue */ //0x24
+            GG_setBGPaletteColor     (0, 0xb4); /* Light blue */
+            GG_setBGPaletteColor     (1, 0xc0); /* Dark blue */
             break;
         case 2:
-            GG_setSpritePaletteColor (0, 0x02); /* Red */
-            GG_setBGPaletteColor     (0, 0x02); /* Red */
-            GG_setBGPaletteColor     (1, 0x16); /* Brick*/
+            GG_setSpritePaletteColor (0, 0x33); /* Red */ //0x02
+            GG_setBGPaletteColor     (0, 0x33); /* Red */
+            GG_setBGPaletteColor     (1, 0xa6); /* Brick*/
             break;
     }
 }
