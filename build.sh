@@ -24,11 +24,12 @@ done
 
 echo ""
 echo "Linking..."
-sdcc -o build/snepzhen_solitaire.ihx -mz80 --no-std-crt0 --data-loc 0xC000 ${devkitSMS}/crt0/crt0_sms.rel build/*.rel ${SMSlib}/SMSlib.lib || exit 1
+#sdcc -o build/snepzhen_solitaire.ihx -mz80 --no-std-crt0 --data-loc 0xC000 ${devkitSMS}/crt0/crt0_sms.rel build/*.rel ${SMSlib}/SMSlib.lib || exit 1
+sdcc -o build/snepzhen_solitaire.ihx -mz80 --no-std-crt0 --data-loc 0xC000 ${devkitSMS}/crt0/crt0_sms.rel build/*.rel ${SMSlib}/SMSlib_GG.lib || exit 1
 
 echo ""
 echo "Generating ROM..."
-${ihx2sms} build/snepzhen_solitaire.ihx snepzhen_solitaire.sms || exit 1
+${ihx2sms} build/snepzhen_solitaire.ihx shenzhen_solitaire.gg || exit 1
 
 echo ""
 echo "Done"
