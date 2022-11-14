@@ -14,3 +14,5 @@ todo:
 * allow for down dpad to switch row from top
 
 * change graphics to reflect original shenzhen solitaire theme
+
+smspower post: https://www.smspower.org/forums/18408-CodingCompetition2021SnepzhenSolitaireByJoppyFurr#123537
