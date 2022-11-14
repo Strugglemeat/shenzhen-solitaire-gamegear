@@ -26,21 +26,21 @@
 
 /* Palette */
 const uint8_t palette [16] = {
-    0x04,   /*  0 - (table) Dark green */
+    0x94,   /*  0 - (table) Dark green */
     0x19,   /*  1 - (table) Light green */
     0x00,   /*  2 - (card / cursor) Black */
     0x3f,   /*  3 - (card / cursor) White */
     0xa9,//0x02,   /*  4 - (card) Red */
-    0xc2,//0x09,   /*  5 - (card / menu) Green */
-    0x2a,   /*  6 - (cursor) Light grey */
-    0xb1,//0x15,   /*  7 - (cursor) Dark grey */
-    0x24,   /*  8 - (menu) Blue */
+    0x09,//0x09,   /*  5 - (card / menu) Green */
+    0x2a,   /*  6 - (cursor) Light grey */      //fill the card color
+    0xb1,//0x15,   /*  7 - (cursor) Dark grey */  //outline the card
+    0xc4,   /*  8 - (menu) Blue */
     0x16,   /*  9 - (menu) Brick */
     0x04,   /* 10 - (menu) Dark green */
 };
 
 bool sprite_update = false;
-uint8_t cursor_style = 2;
+uint8_t cursor_style = 1;
 
 /* Card bits:
  *   [6:7] Zero
@@ -76,21 +76,21 @@ bool button_active [3] = { false };
 enum cursor_stack_e
 {
     CURSOR_COLUMN_1 = 0,
-    CURSOR_COLUMN_2,
-    CURSOR_COLUMN_3,
-    CURSOR_COLUMN_4,
-    CURSOR_COLUMN_5,
-    CURSOR_COLUMN_6,
-    CURSOR_COLUMN_7,
-    CURSOR_COLUMN_8,
-    CURSOR_DRAGON_SLOT_1,
-    CURSOR_DRAGON_SLOT_2,
-    CURSOR_DRAGON_SLOT_3,
-    CURSOR_DRAGON_BUTTONS,
-    CURSOR_FOUNDATION_SNEP,
-    CURSOR_FOUNDATION_1,
-    CURSOR_FOUNDATION_2,
-    CURSOR_FOUNDATION_3,
+    CURSOR_COLUMN_2,//1
+    CURSOR_COLUMN_3,//2
+    CURSOR_COLUMN_4,//3
+    CURSOR_COLUMN_5,//4
+    CURSOR_COLUMN_6,//5
+    CURSOR_COLUMN_7,//6
+    CURSOR_COLUMN_8,//7
+    CURSOR_DRAGON_SLOT_1,//8
+    CURSOR_DRAGON_SLOT_2,//9
+    CURSOR_DRAGON_SLOT_3,//10
+    CURSOR_DRAGON_BUTTONS,//11
+    CURSOR_FOUNDATION_SNEP,//12
+    CURSOR_FOUNDATION_1,//13
+    CURSOR_FOUNDATION_2,//14
+    CURSOR_FOUNDATION_3,//15
     CURSOR_STACK_MAX
 };
 
@@ -98,14 +98,8 @@ enum cursor_stack_e
 uint8_t cursor_stack = CURSOR_COLUMN_1;
 uint8_t cursor_depth = CURSOR_DEPTH_MAX;
 
-int8_t offsetX=34;//38=far left, 34=direct middle, 26=far right 
-#define offsetX_maxLeft 38
-#define offsetX_maxRight 26
-//SMS_loadTileMapArea
-
-void clear_background (void);
-void redrawScene();
-
+unsigned char scrollX;
+void manageScroll();
 /*
  * Calculate the index of the top card in the selected stack.
  */
@@ -319,7 +313,18 @@ void cursor_render_xy (uint8_t cursor_x, uint8_t cursor_y, bool cursor_visible)
  */
 void cursor_sd_to_xy (uint8_t stack, uint8_t depth, uint8_t *x, uint8_t *y)
 {
-    *x = (stack & 0x07) * 32 + 16;
+   // *x = (stack & 0x07) * 32 + 16;
+
+if(cursor_stack==CURSOR_COLUMN_1  || cursor_stack==CURSOR_DRAGON_SLOT_1)*x = 58;
+else if(cursor_stack==CURSOR_COLUMN_2 || cursor_stack==CURSOR_DRAGON_SLOT_2)*x = 80;
+else if(cursor_stack==CURSOR_COLUMN_3 || cursor_stack==CURSOR_DRAGON_SLOT_3)*x = 102;
+else if(cursor_stack==CURSOR_COLUMN_4 || cursor_stack==CURSOR_DRAGON_BUTTONS)*x = 128;
+else if(cursor_stack==CURSOR_COLUMN_5 || cursor_stack==CURSOR_FOUNDATION_SNEP)*x = 148;
+else if(cursor_stack==CURSOR_COLUMN_6 || cursor_stack==CURSOR_FOUNDATION_1)*x = 154;
+else if(cursor_stack==CURSOR_COLUMN_7 || cursor_stack==CURSOR_FOUNDATION_2)*x = 172;
+else if(cursor_stack==CURSOR_COLUMN_8 || cursor_stack==CURSOR_FOUNDATION_3)*x = 184;
+
+//if(in_menu==true)*x = (stack & 0x07) * 32 + 16;
 
     if (stack == CURSOR_DRAGON_BUTTONS)
     {
@@ -331,7 +336,7 @@ void cursor_sd_to_xy (uint8_t stack, uint8_t depth, uint8_t *x, uint8_t *y)
     }
     else
     {
-        *y = (depth * 7) + 96;//7,88 -> this changes where cursor falls on cards
+        *y = (depth * 8) + 86;//7,88 -> this changes where cursor falls on cards
     }
 }
 
@@ -354,9 +359,8 @@ void cursor_render (void)
         cursor_y += 12;
     }
 
-//cursor_x+=(offsetX*3);
 
-    cursor_render_xy (cursor_x+(offsetX*8), cursor_y, true);
+    cursor_render_xy (cursor_x, cursor_y, true);
 }
 
 
@@ -375,9 +379,6 @@ void cursor_move (uint8_t direction)
             cursor_stack = (cursor_stack + (CURSOR_STACK_MAX - 1)) % CURSOR_STACK_MAX;
             cursor_depth = CURSOR_DEPTH_MAX;
 
-	//if(offsetX<offsetX_maxLeft )offsetX++;
-//offsetX+=cursor_stack;
-
             if (cursor_stack == CURSOR_DRAGON_BUTTONS)
             {
                 if (stack [STACK_HELD] [0] != 0xff)
@@ -391,15 +392,12 @@ void cursor_move (uint8_t direction)
                     cursor_depth = 0;
                 }
             }
-//redrawScene();//new stuff for moving playfield
+//if(scrollX<48)scrollX+=2;
             break;
 
         case PORT_A_KEY_RIGHT:
             cursor_stack = (cursor_stack + 1) % CURSOR_STACK_MAX;
             cursor_depth = CURSOR_DEPTH_MAX;
-
-//if(offsetX>offsetX_maxRight)offsetX--;
-//offsetX-=cursor_stack;
 
             /* Skip over the buttons if holding a card */
             if (cursor_stack == CURSOR_DRAGON_BUTTONS)
@@ -415,7 +413,6 @@ void cursor_move (uint8_t direction)
                     cursor_depth = 0;
                 }
             }
-//redrawScene();//new stuff for moving playfield
             break;
 
         case PORT_A_KEY_UP:
@@ -651,7 +648,7 @@ void render_card_background (uint8_t col, uint8_t y, uint8_t card, bool stacked,
 
     render_card_tiles (card_tiles, card, stacked);
 
-    SMS_loadTileMapArea ((4 * col)+offsetX, y+1, &card_tiles, 4, covered ? 1 : 4);//last parameter 6->4    y+1
+    SMS_loadTileMapArea ((4 * col), y+1, &card_tiles, 4, covered ? 1 : 4);//last parameter 6->4    y+1
 //the cards in the playing field
 }
 
@@ -690,7 +687,7 @@ void render_background (void)
         }
         else
         {
-            SMS_loadTileMapArea ((4 * col)+offsetX, 4, &empty_slot, 4, 4);//last parameter 6->4, 2nd parameter 3
+            SMS_loadTileMapArea ((4 * col), 4, &empty_slot, 4, 4);//last parameter 6->4, 2nd parameter 3
         }
     }
 
@@ -706,7 +703,7 @@ void render_background (void)
 
         if (stack [col] [0] == 0xff)
         {
-            SMS_loadTileMapArea ((4 * col)+offsetX, 10, &empty_slot, 4, 4);//last parameter 6->4, 2nd param 9->8, 8 works well
+            SMS_loadTileMapArea ((4 * col), 10, &empty_slot, 4, 4);//last parameter 6->4, 2nd param 9->8, 8 works well
             depth = 1;
         }
         else
@@ -730,7 +727,7 @@ void render_background (void)
         depth += 4;//5
         while (depth < 18)//18
         {//loadTileMapArea (unsigned char x, unsigned char y,  unsigned int *src, unsigned char width, unsigned char height);
-            SMS_loadTileMapArea ((4 * col)+offsetX, 9 + depth, &blank_line, 4, 1);//9+depth
+            SMS_loadTileMapArea ((4 * col), 9 + depth, &blank_line, 4, 1);//9+depth
             depth++;
         }
     }
@@ -752,7 +749,7 @@ void render_background (void)
         button_tiles [2] = BUTTON_TILES + (i * 8) + (button_active [i] * 4) + 2;
         button_tiles [3] = BUTTON_TILES + (i * 8) + (button_active [i] * 4) + 3;
 
-        SMS_loadTileMapArea (13+offsetX, (i * 2) + 3, &button_tiles, 2, 2);//(i * 2) + 1
+        SMS_loadTileMapArea (13, (i * 2) + 3, &button_tiles, 2, 2);//(i * 2) + 1
     }
 
     memset (stack_changed, false, sizeof (stack_changed));
@@ -841,7 +838,7 @@ void deal (void)
         }
     }
 
-    cursor_stack = CURSOR_COLUMN_1;
+    cursor_stack = CURSOR_COLUMN_6;//CURSOR_COLUMN_1;
     cursor_depth = CURSOR_DEPTH_MAX;
     cursor_move (PORT_A_KEY_DOWN);
 }
@@ -894,13 +891,6 @@ void undeal (void)
         }
     }
 }
-
-void redrawScene()
-{
-clear_background();
-render_background();
-}
-
 
 /*
  * Fill the name table with tile-zero.
@@ -1167,6 +1157,8 @@ void game (void)
             sprite_update = false;
         }
         render_background ();
+manageScroll();
+
 
         /* Check if the game is still in progress */
         playing = false;
@@ -1197,23 +1189,40 @@ void next_palette (void)
     switch (index)
     {
         case 0:
-            GG_setSpritePaletteColor (0, 0x05); /* Dark green */ //0x04
-            GG_setBGPaletteColor     (0, 0x05); /* Dark green */
-            GG_setBGPaletteColor     (1, 0xb9); /* Light green */
+            GG_setSpritePaletteColor (0, 0x06); /* Dark green */ //0x04
+            GG_setBGPaletteColor     (0, 0x06); /* Dark green */
+            GG_setBGPaletteColor     (1, 0xd0); /* Light green */
             break;
         case 1:
-            GG_setSpritePaletteColor (0, 0xb4); /* Light blue */ //0x24
-            GG_setBGPaletteColor     (0, 0xb4); /* Light blue */
-            GG_setBGPaletteColor     (1, 0xc0); /* Dark blue */
+            GG_setSpritePaletteColor (0, 0xe8); /* Light blue */ //0x24
+            GG_setBGPaletteColor     (0, 0xe8); /* Light blue */
+            GG_setBGPaletteColor     (1, 0x09); /* Dark blue */
             break;
         case 2:
             GG_setSpritePaletteColor (0, 0x33); /* Red */ //0x02
             GG_setBGPaletteColor     (0, 0x33); /* Red */
-            GG_setBGPaletteColor     (1, 0xa6); /* Brick*/
+            GG_setBGPaletteColor     (1, 0xf6); /* Brick*/
             break;
     }
 }
 
+void manageScroll()
+{
+//scrollX=(cursor_stack-6)*8;
+//if(scrollX>48)scrollX=48;
+
+if(cursor_stack==CURSOR_COLUMN_1  || cursor_stack==CURSOR_DRAGON_SLOT_1)scrollX=48;//48
+else if(cursor_stack==CURSOR_COLUMN_2 || cursor_stack==CURSOR_DRAGON_SLOT_2)scrollX=38;//40
+else if(cursor_stack==CURSOR_COLUMN_3 || cursor_stack==CURSOR_DRAGON_SLOT_3)scrollX=28;//32
+else if(cursor_stack==CURSOR_COLUMN_4 || cursor_stack==CURSOR_DRAGON_BUTTONS)scrollX=18;//24
+else if(cursor_stack==CURSOR_COLUMN_5 || cursor_stack==CURSOR_FOUNDATION_SNEP)scrollX=8;//16
+else if(cursor_stack==CURSOR_COLUMN_6 || cursor_stack==CURSOR_FOUNDATION_1)scrollX=238;//8
+else if(cursor_stack==CURSOR_COLUMN_7 || cursor_stack==CURSOR_FOUNDATION_2)scrollX=228;//0
+else if(cursor_stack==CURSOR_COLUMN_8 || cursor_stack==CURSOR_FOUNDATION_3)scrollX=208;//216
+//else scrollX=0;
+
+SMS_setBGScrollX(scrollX);
+}
 
 /*
  * Main menu.
@@ -1252,11 +1261,12 @@ void menu (void)
         card_tiles [13] = tile + 2;//17
         card_tiles [14] = tile + 3;//18
 //SMS_loadTileMapArea (unsigned char x, unsigned char y,  unsigned int *src, unsigned char width, unsigned char height);
-        SMS_loadTileMapArea ((4 * (i + 2))+offsetX, 10, &card_tiles, 4, 4);// last parameter height 6->4  //2nd parameter Y 9->8
+        SMS_loadTileMapArea ((4 * (i + 2)), 10, &card_tiles, 4, 4);// last parameter height 6->4  //2nd parameter Y 9->8
     }
 
     while (in_menu)
     {
+
         static uint16_t keys_previous = 0;
         uint16_t keys = SMS_getKeysStatus ();
         uint16_t keys_pressed = (keys & ~keys_previous);
@@ -1300,6 +1310,8 @@ void menu (void)
 
     memset (stack_changed, true, sizeof (stack_changed));
     render_background ();
+manageScroll();
+
 }
 
 
