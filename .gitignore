@@ -1,4 +1,0 @@
-# Ignore build artefacts and output
-build/
-*.sms
-
