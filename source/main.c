@@ -30,10 +30,10 @@ const uint8_t palette [16] = {
     0x19,   /*  1 - (table) Light green */
     0x00,   /*  2 - (card / cursor) Black */
     0x3f,   /*  3 - (card / cursor) White */
-    0x02,   /*  4 - (card) Red */
-    0x09,   /*  5 - (card / menu) Green */
+    0xa9,//0x02,   /*  4 - (card) Red */
+    0xc2,//0x09,   /*  5 - (card / menu) Green */
     0x2a,   /*  6 - (cursor) Light grey */
-    0x15,   /*  7 - (cursor) Dark grey */
+    0xb1,//0x15,   /*  7 - (cursor) Dark grey */
     0x24,   /*  8 - (menu) Blue */
     0x16,   /*  9 - (menu) Brick */
     0x04,   /* 10 - (menu) Dark green */
@@ -272,11 +272,11 @@ void cursor_render_xy (uint8_t cursor_x, uint8_t cursor_y, bool cursor_visible)
         for (uint8_t i = top; i != 0xff; i--)
         {
             uint16_t card_y = cursor_y + (8 * i) - 4;
-            uint16_t card_tiles [24];
+            uint16_t card_tiles [16];//24
 
             render_card_tiles (card_tiles, stack [STACK_HELD] [i], i > 0);
 
-            for (uint8_t y = 0; y < 6; y++)
+            for (uint8_t y = 0; y < 4; y++)//6
             {
                 uint16_t sprite_y = card_y + (8 * y);
 
@@ -290,6 +290,7 @@ void cursor_render_xy (uint8_t cursor_x, uint8_t cursor_y, bool cursor_visible)
 
                 for (uint8_t x = 0; x < 4; x++)
                 {
+//SMS_addSprite (unsigned char x, unsigned char y, unsigned char tile);  /* declare a sprite - returns handle or -1 if no more sprites are available */
                     SMS_addSprite (card_x + (8 * x), sprite_y, (uint8_t) card_tiles [x + (4 * y)]);
                 }
 
@@ -323,7 +324,7 @@ void cursor_sd_to_xy (uint8_t stack, uint8_t depth, uint8_t *x, uint8_t *y)
     }
     else
     {
-        *y = (depth * 8) + 76;
+        *y = (depth * 7) + 88;//8,76 -> this changes where cursor falls on cards
     }
 }
 
@@ -633,7 +634,7 @@ void render_card_background (uint8_t col, uint8_t y, uint8_t card, bool stacked,
 
     render_card_tiles (card_tiles, card, stacked);
 
-    SMS_loadTileMapArea (4 * col, y, &card_tiles, 4, covered ? 1 : 4);//last parameter 6->4
+    SMS_loadTileMapArea (4 * col, y+1, &card_tiles, 4, covered ? 1 : 4);//last parameter 6->4    y-1
 }
 
 /*
@@ -664,14 +665,14 @@ void render_background (void)
             continue;
         }
 
-        if (stack [i + 8] [0] != 0xff)
+        if (stack [i + 8] [0] != 0xff)//these are cards dropped into the top row
         {
             uint8_t depth = top_card (i + 8);
-            render_card_background (col, 1, stack [i + 8] [depth], false, false);
+            render_card_background (col, 2, stack [i + 8] [depth], false, false);//2nd param 1->2, 2 works well
         }
         else
         {
-            SMS_loadTileMapArea (4 * col, 1, &empty_slot, 4, 4);//last parameter 6->4
+            SMS_loadTileMapArea (4 * col, 3, &empty_slot, 4, 4);//last parameter 6->4, 2nd parameter 1->4, 1 works well
         }
     }
 
@@ -687,7 +688,7 @@ void render_background (void)
 
         if (stack [col] [0] == 0xff)
         {
-            SMS_loadTileMapArea (4 * col, 9, &empty_slot, 4, 4);//last parameter 6->4
+            SMS_loadTileMapArea (4 * col, 10, &empty_slot, 4, 4);//last parameter 6->4, 2nd param 9->8, 8 works well
             depth = 1;
         }
         else
@@ -702,15 +703,15 @@ void render_background (void)
                     break;
                 }
 
-                render_card_background (col, 9 + depth, card, depth, next != 0xff);
+                render_card_background (col, 9 + depth, card, depth, next != 0xff);//9
             }
         }
 
         /* Clear area below stack */
-        depth += 5;
+        depth += 4;//5
         while (depth < 18)//18
-        {
-            SMS_loadTileMapArea (4 * col, 9 + depth, &blank_line, 4, 1);
+        {//loadTileMapArea (unsigned char x, unsigned char y,  unsigned int *src, unsigned char width, unsigned char height);
+            SMS_loadTileMapArea (4 * col, 9 + depth, &blank_line, 4, 1);//9+depth
             depth++;
         }
     }
@@ -732,7 +733,7 @@ void render_background (void)
         button_tiles [2] = BUTTON_TILES + (i * 8) + (button_active [i] * 4) + 2;
         button_tiles [3] = BUTTON_TILES + (i * 8) + (button_active [i] * 4) + 3;
 
-        SMS_loadTileMapArea (13, (i * 2) + 1, &button_tiles, 2, 2);
+        SMS_loadTileMapArea (13, (i * 2) + 3, &button_tiles, 2, 2);//(i * 2) + 1
     }
 
     memset (stack_changed, false, sizeof (stack_changed));
@@ -1226,7 +1227,7 @@ void menu (void)
         card_tiles [13] = tile + 2;//17
         card_tiles [14] = tile + 3;//18
 //SMS_loadTileMapArea (unsigned char x, unsigned char y,  unsigned int *src, unsigned char width, unsigned char height);
-        SMS_loadTileMapArea (4 * (i + 2), 9, &card_tiles, 4, 4);// last parameter height 6->4
+        SMS_loadTileMapArea (4 * (i + 2), 10, &card_tiles, 4, 4);// last parameter height 6->4  //2nd parameter Y 9->8
     }
 
     while (in_menu)
