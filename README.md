@@ -1,7 +1,9 @@
-Snepzhen Solitaire
+Shenzhen Solitaire Game Gear
 ==================
 
-A clone of Shenzhen Solitaire for the Sega Master System
+Original clone is Snepzhen Solitaire for Sega Master System
+
+This is a port of that clone to Sega Game Gear
 
 todo:
 
