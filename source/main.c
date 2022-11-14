@@ -13,7 +13,6 @@
 
 #include "SMSlib.h"
 
-//#include "save.h"
 #include "rng.h"
 #include "patterns.c"
 
@@ -177,12 +176,21 @@ void render_card_tiles (uint16_t *buf, uint8_t card, bool stacked)
 
     uint16_t card_tiles [] = {
         BLANK_CARD +  0, BLANK_CARD +  2, BLANK_CARD +  2, BLANK_CARD +  3,
+//        BLANK_CARD +  5, BLANK_CARD +  6, BLANK_CARD +  6, BLANK_CARD +  7,
         BLANK_CARD +  5, BLANK_CARD +  6, BLANK_CARD +  6, BLANK_CARD +  7,
         BLANK_CARD +  5, BLANK_CARD +  6, BLANK_CARD +  6, BLANK_CARD +  7,
-        BLANK_CARD +  5, BLANK_CARD +  6, BLANK_CARD +  6, BLANK_CARD +  7,
-        BLANK_CARD +  5, BLANK_CARD +  6, BLANK_CARD +  6, BLANK_CARD +  7,
+//        BLANK_CARD +  5, BLANK_CARD +  6, BLANK_CARD +  6, BLANK_CARD +  7,
         BLANK_CARD +  8, BLANK_CARD +  9, BLANK_CARD +  9, BLANK_CARD + 10
     };
+
+/*
+[1] 0,1,2,3
+[2] 4,5,6,7
+[3] 8,9,10,11
+[4] 12,13,14,15
+[5] 16,17,18,19
+[6] 20,21,22,23
+*/
 
     if ((card & CARD_TYPE_MASK) == 0x30)
     {
@@ -190,11 +198,11 @@ void render_card_tiles (uint16_t *buf, uint8_t card, bool stacked)
         {
             /* Snep card */
             card_tiles [0]  = CORNER_SNEP;
-            card_tiles [23] = CORNER_SNEP + 2;
+            card_tiles [15] = CORNER_SNEP + 2;// card_tiles [23] = CORNER_SNEP + 2;
 
-            for (uint8_t i = 0; i < 16; i++)
+            for (uint8_t i = 0; i < 12; i++)//16
             {
-                card_tiles [i + 4] = ARTWORK_SNEP + i;
+                card_tiles [i + 4] = ARTWORK_SNEP + i;//4
             }
         }
         else
@@ -204,10 +212,10 @@ void render_card_tiles (uint16_t *buf, uint8_t card, bool stacked)
             card_tiles [1]  = CORNER_PRINTS + (value * 3) + 2;
 
             tile = ARTWORK_PRINTS + value * 4;
-            card_tiles [ 9] = tile;
-            card_tiles [10] = tile + 1;
-            card_tiles [13] = tile + 2;
-            card_tiles [14] = tile + 3;
+            card_tiles [5] = tile;//9
+            card_tiles [6] = tile + 1;//10
+            card_tiles [9] = tile + 2;//13
+            card_tiles [10] = tile + 3;//14
         }
     }
     else
@@ -221,10 +229,10 @@ void render_card_tiles (uint16_t *buf, uint8_t card, bool stacked)
 
         /* Chinese numbers */
         tile = ARTWORK_NUMBERS + value * 12 + colour * 4;
-        card_tiles [ 9] = tile;
-        card_tiles [10] = tile + 1;
-        card_tiles [13] = tile + 2;
-        card_tiles [14] = tile + 3;
+        card_tiles [5] = tile;//9
+        card_tiles [6] = tile + 1;//10
+        card_tiles [9] = tile + 2;//13
+        card_tiles [10] = tile + 3;//14
     }
 
     if (stacked)
@@ -272,8 +280,10 @@ void cursor_render_xy (uint8_t cursor_x, uint8_t cursor_y, bool cursor_visible)
             {
                 uint16_t sprite_y = card_y + (8 * y);
 
+#define screen_max_Y 144
+
                 /* Don't draw sprites that are completely off screen */
-                if (sprite_y > 192)
+                if (sprite_y > screen_max_Y)
                 {
                     continue;
                 }
@@ -619,7 +629,7 @@ void cursor_place (void)
  */
 void render_card_background (uint8_t col, uint8_t y, uint8_t card, bool stacked, bool covered)
 {
-    uint16_t card_tiles [24];
+    uint16_t card_tiles [16];//24
 
     render_card_tiles (card_tiles, card, stacked);
 
@@ -636,10 +646,10 @@ void render_background (void)
     };
     uint16_t empty_slot [] = {
         OUTLINE_CARD + 0, OUTLINE_CARD + 1, OUTLINE_CARD + 1, OUTLINE_CARD + 2,
+        //OUTLINE_CARD + 3, EMPTY_TILE,       EMPTY_TILE,       OUTLINE_CARD + 4,
         OUTLINE_CARD + 3, EMPTY_TILE,       EMPTY_TILE,       OUTLINE_CARD + 4,
         OUTLINE_CARD + 3, EMPTY_TILE,       EMPTY_TILE,       OUTLINE_CARD + 4,
-        OUTLINE_CARD + 3, EMPTY_TILE,       EMPTY_TILE,       OUTLINE_CARD + 4,
-        OUTLINE_CARD + 3, EMPTY_TILE,       EMPTY_TILE,       OUTLINE_CARD + 4,
+        //OUTLINE_CARD + 3, EMPTY_TILE,       EMPTY_TILE,       OUTLINE_CARD + 4,
         OUTLINE_CARD + 5, OUTLINE_CARD + 6, OUTLINE_CARD + 6, OUTLINE_CARD + 7
     };
     uint16_t button_tiles [4];
@@ -799,7 +809,7 @@ void deal (void)
 
             /* Animate the card being dealt */
             stack [STACK_HELD] [0] = deck [i];
-            card_slide (dest_x, 192, dest_x, dest_y, 8, false);
+            card_slide (dest_x, 144+16, dest_x, dest_y, 8, false);//2nd paramter is where it comes from
             stack [STACK_HELD] [0] = 0xff;
 
             /* Store the card in its new position */
@@ -871,11 +881,18 @@ void undeal (void)
  */
 void clear_background (void)
 {
-    uint16_t blank_line [32] = { 0 };
+    uint16_t blank_line [32] = { 0 };//32
 
-    for (uint8_t row = 0; row < 24; row++)
+//256/8=32
+//160/8=20
+
+//224/8=28
+//144/8=18
+
+    for (uint8_t row = 0; row < 18; row++)//24
     {
-        SMS_loadTileMapArea (0, row, &blank_line, 32, 1);
+//SMS_loadTileMapArea (unsigned char x, unsigned char y,  unsigned int *src, unsigned char width, unsigned char height);
+        SMS_loadTileMapArea (0, row, &blank_line, 20, 1);//32
     }
 }
 
@@ -1200,18 +1217,18 @@ void menu (void)
     for (uint8_t i = 0; i < 3; i++)
     {
         uint16_t tile = MENU_TEXT + (4 * i);
-        card_tiles [4] = tile;
-        card_tiles [5] = tile + 1;
-        card_tiles [6] = tile + 2;
-        card_tiles [7] = tile + 3;
+        card_tiles [4] = tile;//4
+        card_tiles [5] = tile + 1;//5
+        card_tiles [6] = tile + 2;//6
+        card_tiles [7] = tile + 3;//7
 
         tile = MENU_ICONS + (4 * i);
-        card_tiles [13] = tile;
-        card_tiles [14] = tile + 1;
-        card_tiles [17] = tile + 2;
-        card_tiles [18] = tile + 3;
-
-        SMS_loadTileMapArea (4 * (i + 2), 9, &card_tiles, 4, 6);
+        card_tiles [9] = tile;//13
+        card_tiles [10] = tile + 1;//14
+        card_tiles [13] = tile + 2;//17
+        card_tiles [14] = tile + 3;//18
+//SMS_loadTileMapArea (unsigned char x, unsigned char y,  unsigned int *src, unsigned char width, unsigned char height);
+        SMS_loadTileMapArea (4 * (i + 2), 9, &card_tiles, 4, 4);// last parameter height 6->4
     }
 
     while (in_menu)
@@ -1280,8 +1297,6 @@ void main (void)
     SMS_copySpritestoSAT ();
 
     SMS_displayOn ();
-
-    //sram_load ();
 
     menu ();
 
