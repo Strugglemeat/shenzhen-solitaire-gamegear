@@ -1,8 +1,10 @@
 /*
- * Snepzhen Solitaire
+ * Shenzhen Solitaire Game Gear
  *
- * A Shenzhen I/O Solitaire clone for the Sega Master System
+ * A Shenzhen I/O Solitaire clone for the Sega Game Gear
  */
+
+#define TARGET_GG
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -11,9 +13,11 @@
 
 #include "SMSlib.h"
 
-#include "save.h"
+//#include "save.h"
 #include "rng.h"
 #include "patterns.c"
+
+
 
 /* Constants */
 #define PORT_A_KEY_DPAD     (PORT_A_KEY_UP | PORT_A_KEY_DOWN | PORT_A_KEY_LEFT | PORT_A_KEY_RIGHT)
@@ -1150,19 +1154,19 @@ void next_palette (void)
     switch (index)
     {
         case 0:
-            SMS_setSpritePaletteColor (0, 0x04); /* Dark green */
-            SMS_setBGPaletteColor     (0, 0x04); /* Dark green */
-            SMS_setBGPaletteColor     (1, 0x19); /* Light green */
+            GG_setSpritePaletteColor (0, 0x04); /* Dark green */
+            GG_setBGPaletteColor     (0, 0x04); /* Dark green */
+            GG_setBGPaletteColor     (1, 0x19); /* Light green */
             break;
         case 1:
-            SMS_setSpritePaletteColor (0, 0x24); /* Light blue */
-            SMS_setBGPaletteColor     (0, 0x24); /* Light blue */
-            SMS_setBGPaletteColor     (1, 0x20); /* Dark blue */
+            GG_setSpritePaletteColor (0, 0x24); /* Light blue */
+            GG_setBGPaletteColor     (0, 0x24); /* Light blue */
+            GG_setBGPaletteColor     (1, 0x20); /* Dark blue */
             break;
         case 2:
-            SMS_setSpritePaletteColor (0, 0x02); /* Red */
-            SMS_setBGPaletteColor     (0, 0x02); /* Red */
-            SMS_setBGPaletteColor     (1, 0x16); /* Brick*/
+            GG_setSpritePaletteColor (0, 0x02); /* Red */
+            GG_setBGPaletteColor     (0, 0x02); /* Red */
+            GG_setBGPaletteColor     (1, 0x16); /* Brick*/
             break;
     }
 }
@@ -1264,8 +1268,8 @@ void menu (void)
 void main (void)
 {
     /* Setup */
-    SMS_loadBGPalette (palette);
-    SMS_loadSpritePalette (palette);
+    GG_loadBGPalette (palette);
+    GG_loadSpritePalette (palette);
     SMS_setBackdropColor (0);
 
     SMS_loadTiles (patterns, 0, sizeof (patterns));
@@ -1277,7 +1281,7 @@ void main (void)
 
     SMS_displayOn ();
 
-    sram_load ();
+    //sram_load ();
 
     menu ();
 
