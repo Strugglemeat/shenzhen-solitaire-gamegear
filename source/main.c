@@ -98,6 +98,13 @@ enum cursor_stack_e
 uint8_t cursor_stack = CURSOR_COLUMN_1;
 uint8_t cursor_depth = CURSOR_DEPTH_MAX;
 
+int8_t offsetX=34;//38=far left, 34=direct middle, 26=far right 
+#define offsetX_maxLeft 38
+#define offsetX_maxRight 26
+//SMS_loadTileMapArea
+
+void clear_background (void);
+void redrawScene();
 
 /*
  * Calculate the index of the top card in the selected stack.
@@ -320,11 +327,11 @@ void cursor_sd_to_xy (uint8_t stack, uint8_t depth, uint8_t *x, uint8_t *y)
     }
     else if (stack > CURSOR_COLUMN_8)
     {
-        *y = 38;//12 default. 20 works well
+        *y = 44;//12 default. 20 works well
     }
     else
     {
-        *y = (depth * 7) + 88;//8,76 -> this changes where cursor falls on cards
+        *y = (depth * 7) + 96;//7,88 -> this changes where cursor falls on cards
     }
 }
 
@@ -347,7 +354,9 @@ void cursor_render (void)
         cursor_y += 12;
     }
 
-    cursor_render_xy (cursor_x, cursor_y, true);
+//cursor_x+=(offsetX*3);
+
+    cursor_render_xy (cursor_x+(offsetX*8), cursor_y, true);
 }
 
 
@@ -366,6 +375,9 @@ void cursor_move (uint8_t direction)
             cursor_stack = (cursor_stack + (CURSOR_STACK_MAX - 1)) % CURSOR_STACK_MAX;
             cursor_depth = CURSOR_DEPTH_MAX;
 
+	//if(offsetX<offsetX_maxLeft )offsetX++;
+//offsetX+=cursor_stack;
+
             if (cursor_stack == CURSOR_DRAGON_BUTTONS)
             {
                 if (stack [STACK_HELD] [0] != 0xff)
@@ -379,11 +391,15 @@ void cursor_move (uint8_t direction)
                     cursor_depth = 0;
                 }
             }
+//redrawScene();//new stuff for moving playfield
             break;
 
         case PORT_A_KEY_RIGHT:
             cursor_stack = (cursor_stack + 1) % CURSOR_STACK_MAX;
             cursor_depth = CURSOR_DEPTH_MAX;
+
+//if(offsetX>offsetX_maxRight)offsetX--;
+//offsetX-=cursor_stack;
 
             /* Skip over the buttons if holding a card */
             if (cursor_stack == CURSOR_DRAGON_BUTTONS)
@@ -399,6 +415,7 @@ void cursor_move (uint8_t direction)
                     cursor_depth = 0;
                 }
             }
+//redrawScene();//new stuff for moving playfield
             break;
 
         case PORT_A_KEY_UP:
@@ -634,7 +651,7 @@ void render_card_background (uint8_t col, uint8_t y, uint8_t card, bool stacked,
 
     render_card_tiles (card_tiles, card, stacked);
 
-    SMS_loadTileMapArea (4 * col, y+1, &card_tiles, 4, covered ? 1 : 4);//last parameter 6->4    y+1
+    SMS_loadTileMapArea ((4 * col)+offsetX, y+1, &card_tiles, 4, covered ? 1 : 4);//last parameter 6->4    y+1
 //the cards in the playing field
 }
 
@@ -673,7 +690,7 @@ void render_background (void)
         }
         else
         {
-            SMS_loadTileMapArea (4 * col, 4, &empty_slot, 4, 4);//last parameter 6->4, 2nd parameter 3
+            SMS_loadTileMapArea ((4 * col)+offsetX, 4, &empty_slot, 4, 4);//last parameter 6->4, 2nd parameter 3
         }
     }
 
@@ -689,7 +706,7 @@ void render_background (void)
 
         if (stack [col] [0] == 0xff)
         {
-            SMS_loadTileMapArea (4 * col, 10, &empty_slot, 4, 4);//last parameter 6->4, 2nd param 9->8, 8 works well
+            SMS_loadTileMapArea ((4 * col)+offsetX, 10, &empty_slot, 4, 4);//last parameter 6->4, 2nd param 9->8, 8 works well
             depth = 1;
         }
         else
@@ -713,7 +730,7 @@ void render_background (void)
         depth += 4;//5
         while (depth < 18)//18
         {//loadTileMapArea (unsigned char x, unsigned char y,  unsigned int *src, unsigned char width, unsigned char height);
-            SMS_loadTileMapArea (4 * col, 9 + depth, &blank_line, 4, 1);//9+depth
+            SMS_loadTileMapArea ((4 * col)+offsetX, 9 + depth, &blank_line, 4, 1);//9+depth
             depth++;
         }
     }
@@ -735,7 +752,7 @@ void render_background (void)
         button_tiles [2] = BUTTON_TILES + (i * 8) + (button_active [i] * 4) + 2;
         button_tiles [3] = BUTTON_TILES + (i * 8) + (button_active [i] * 4) + 3;
 
-        SMS_loadTileMapArea (13, (i * 2) + 3, &button_tiles, 2, 2);//(i * 2) + 1
+        SMS_loadTileMapArea (13+offsetX, (i * 2) + 3, &button_tiles, 2, 2);//(i * 2) + 1
     }
 
     memset (stack_changed, false, sizeof (stack_changed));
@@ -876,6 +893,12 @@ void undeal (void)
             stack [STACK_HELD] [0] = 0xff;
         }
     }
+}
+
+void redrawScene()
+{
+clear_background();
+render_background();
 }
 
 
@@ -1229,7 +1252,7 @@ void menu (void)
         card_tiles [13] = tile + 2;//17
         card_tiles [14] = tile + 3;//18
 //SMS_loadTileMapArea (unsigned char x, unsigned char y,  unsigned int *src, unsigned char width, unsigned char height);
-        SMS_loadTileMapArea (4 * (i + 2), 10, &card_tiles, 4, 4);// last parameter height 6->4  //2nd parameter Y 9->8
+        SMS_loadTileMapArea ((4 * (i + 2))+offsetX, 10, &card_tiles, 4, 4);// last parameter height 6->4  //2nd parameter Y 9->8
     }
 
     while (in_menu)
