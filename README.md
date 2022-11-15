@@ -19,6 +19,8 @@ done:
 
 * palettes fixed up for game gear
 
-* cards retain their 4 tile width while using X scrolling
+* cards shortened from 6 tiles tall to 4 tiles tall (they're v. cute now)
+
+* cards retain their 4 tile width while using X scrolling to move the camera
 
 * start button deals a new game
