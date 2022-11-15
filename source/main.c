@@ -32,15 +32,22 @@ const uint8_t palette [16] = {
     0x3f,   /*  3 - (card / cursor) White */
     0xa9,//0x02,   /*  4 - (card) Red */
     0x09,//0x09,   /*  5 - (card / menu) Green */
-    0x2a,   /*  6 - (cursor) Light grey */      //fill the card color
+    0xd9,   /*  6 - (cursor) Light grey */      //fill the card color
     0xb1,//0x15,   /*  7 - (cursor) Dark grey */  //outline the card
     0xc4,   /*  8 - (menu) Blue */
     0x16,   /*  9 - (menu) Brick */
     0x04,   /* 10 - (menu) Dark green */
 };
 
+//0e = red
+//3b=orange
+//3f=bright red
+//94=light green
+//a9=dark yellow
+
 bool sprite_update = false;
 uint8_t cursor_style = 1;
+    bool in_menu = true;
 
 /* Card bits:
  *   [6:7] Zero
@@ -320,11 +327,11 @@ else if(cursor_stack==CURSOR_COLUMN_2 || cursor_stack==CURSOR_DRAGON_SLOT_2)*x =
 else if(cursor_stack==CURSOR_COLUMN_3 || cursor_stack==CURSOR_DRAGON_SLOT_3)*x = 102;
 else if(cursor_stack==CURSOR_COLUMN_4 || cursor_stack==CURSOR_DRAGON_BUTTONS)*x = 128;
 else if(cursor_stack==CURSOR_COLUMN_5 || cursor_stack==CURSOR_FOUNDATION_SNEP)*x = 148;
-else if(cursor_stack==CURSOR_COLUMN_6 || cursor_stack==CURSOR_FOUNDATION_1)*x = 154;
+else if(cursor_stack==CURSOR_COLUMN_6 || cursor_stack==CURSOR_FOUNDATION_1)*x = 151;
 else if(cursor_stack==CURSOR_COLUMN_7 || cursor_stack==CURSOR_FOUNDATION_2)*x = 172;
 else if(cursor_stack==CURSOR_COLUMN_8 || cursor_stack==CURSOR_FOUNDATION_3)*x = 184;
 
-//if(in_menu==true)*x = (stack & 0x07) * 32 + 16;
+if(in_menu==true)*x = (stack & 0x07) * 32 + 16;
 
     if (stack == CURSOR_DRAGON_BUTTONS)
     {
@@ -392,7 +399,7 @@ void cursor_move (uint8_t direction)
                     cursor_depth = 0;
                 }
             }
-//if(scrollX<48)scrollX+=2;
+
             break;
 
         case PORT_A_KEY_RIGHT:
@@ -445,6 +452,12 @@ void cursor_move (uint8_t direction)
     {
         cursor_depth = stack_max_depth;
     }
+
+if (in_menu==true)
+{
+	if(cursor_stack <2)cursor_stack=2;
+	if(cursor_stack >4)cursor_stack=4;
+}
 
     cursor_render ();
 }
@@ -824,6 +837,8 @@ void deal (void)
 
             cursor_sd_to_xy (col, depth, &dest_x, &dest_y);
 
+dest_x=(col+1)*32;
+
             /* Animate the card being dealt */
             stack [STACK_HELD] [0] = deck [i];
             card_slide (dest_x, 144+24, dest_x, dest_y, 8, false);//2nd paramter is where it comes from
@@ -877,6 +892,7 @@ void undeal (void)
 
             cards_left = true;
 
+
             cursor_sd_to_xy (col, top, &from_x, &from_y);
 
             /* Animate the card being removed */
@@ -908,7 +924,7 @@ void clear_background (void)
     for (uint8_t row = 0; row < 18; row++)//24
     {
 //SMS_loadTileMapArea (unsigned char x, unsigned char y,  unsigned int *src, unsigned char width, unsigned char height);
-        SMS_loadTileMapArea (0, row, &blank_line, 20, 1);//32
+        SMS_loadTileMapArea (0, row, &blank_line, 28, 1);//32
     }
 }
 
@@ -1189,19 +1205,19 @@ void next_palette (void)
     switch (index)
     {
         case 0:
-            GG_setSpritePaletteColor (0, 0x06); /* Dark green */ //0x04
-            GG_setBGPaletteColor     (0, 0x06); /* Dark green */
-            GG_setBGPaletteColor     (1, 0xd0); /* Light green */
+            GG_setSpritePaletteColor (0, RGB(33,10,77)); 
+            GG_setBGPaletteColor     (0, RGB(33,10,77));      //the board color
+            GG_setBGPaletteColor     (1, RGB(0x00,0x00,0x00)); /* Light green */      //the card outline
             break;
         case 1:
-            GG_setSpritePaletteColor (0, 0xe8); /* Light blue */ //0x24
-            GG_setBGPaletteColor     (0, 0xe8); /* Light blue */
-            GG_setBGPaletteColor     (1, 0x09); /* Dark blue */
+            GG_setSpritePaletteColor (0, 0x2a);  //0x24   0xe8
+            GG_setBGPaletteColor     (0, 0x2a); 
+            GG_setBGPaletteColor     (1, RGB(0x00,0x00,0x00)); /* Dark blue */
             break;
         case 2:
-            GG_setSpritePaletteColor (0, 0x33); /* Red */ //0x02
-            GG_setBGPaletteColor     (0, 0x33); /* Red */
-            GG_setBGPaletteColor     (1, 0xf6); /* Brick*/
+            GG_setSpritePaletteColor (0, 0x33); //0x33
+            GG_setBGPaletteColor     (0, 0x33); 
+            GG_setBGPaletteColor     (1, RGB(0x00,0x00,0x00)); /* Brick*/
             break;
     }
 }
@@ -1229,7 +1245,7 @@ SMS_setBGScrollX(scrollX);
  */
 void menu (void)
 {
-    bool in_menu = true;
+
     uint16_t card_tiles [] = {
         BLANK_CARD +  0, BLANK_CARD +  2, BLANK_CARD +  2, BLANK_CARD +  3,
         //BLANK_CARD +  5, BLANK_CARD +  6, BLANK_CARD +  6, BLANK_CARD +  7,
@@ -1277,6 +1293,7 @@ void menu (void)
             cursor_move (keys_pressed);
         }
 
+
         if (keys_pressed & PORT_A_KEY_1)
         {
             /* Start */
@@ -1318,12 +1335,38 @@ manageScroll();
 /*
  * Entry point.
  */
+
+/*
+const uint8_t palette [16] = {
+    0x94,   //  0 - (table) Dark green 
+    0x19,   // 1 - (table) Light green 
+    0x00,   //  2 - (card / cursor) Black 
+    0x3f,   //  3 - (card / cursor) White 
+    0xa9,//0x02,   //  4 - (card) Red 
+    0x09,//0x09,   //  5 - (card / menu) Green 
+    0xd9,   //  6 - (cursor) Light grey       //fill the card color
+    0xb1,//0x15,   //  7 - (cursor) Dark grey   //outline the card
+    0xc4,   //  8 - (menu) Blue 
+    0x16,   //  9 - (menu) Brick 
+    0x04,   // 10 - (menu) Dark green 
+*/
+
 void main (void)
 {
     /* Setup */
     GG_loadBGPalette (palette);
     GG_loadSpritePalette (palette);
     SMS_setBackdropColor (0);
+
+//begin new palette stuff
+GG_setBGPaletteColor (1, RGB(0x01,0x00,0x00)); //card outline
+
+GG_setBGPaletteColor (3, RGB(0xff,0xff,0xff));  //makes the cards inside fill white - good
+
+GG_setBGPaletteColor (0, RGB(20,0xd1,20));//background
+
+GG_setSpritePaletteColor (3, RGB(0x00,0xff,20));
+//end new palette stuff
 
     SMS_loadTiles (patterns, 0, sizeof (patterns));
     clear_background ();
