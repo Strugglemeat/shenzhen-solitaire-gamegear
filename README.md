@@ -22,3 +22,5 @@ done:
 * palettes fixed up for game gear
 
 * cards retain their 4 tile width while using X scrolling
+
+* start button deals a new game
