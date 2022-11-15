@@ -11,6 +11,8 @@ todo:
 
 * change graphics to reflect original shenzhen solitaire theme
 
+* fix X position of card sprites during undeal after winning
+
 * start button for in-game menu to start a new game
 
 smspower post: https://www.smspower.org/forums/18408-CodingCompetition2021SnepzhenSolitaireByJoppyFurr#123537
