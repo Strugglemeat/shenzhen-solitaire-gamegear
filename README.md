@@ -7,8 +7,6 @@ This is a port of that clone to Sega Game Gear
 
 todo:
 
-* allow for down dpad to switch row from top
-
 * change graphics to reflect original shenzhen solitaire theme
 
 * fix X position of card sprites during undeal after winning
@@ -24,3 +22,5 @@ done:
 * cards retain their 4 tile width while using X scrolling
 
 * start button deals a new game
+
+* down dpad to switch row from top (except for from the 3 emblems)
